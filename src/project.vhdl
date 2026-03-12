@@ -16,10 +16,35 @@ entity tt_um_theli11 is
 end tt_um_theli11;
 
 architecture Behavioral of tt_um_theli11 is
+    signal a, b : unsigned(3 downto 0);
+    signal op : std_logic_vector(2 downto 0);
+    signal r : unsigned(3 downto 0);
 begin
 
-    uo_out <= std_logic_vector(unsigned(ui_in) + unsigned(uio_in));
-    uio_out <= "00000000";
-    uio_oe <= "00000000";
+    pipeline: process(clk) is
+    begin
+        if rising_edge(clk) then
+            if ena = '1' then
+                a <= unsigned(ui_in(3 downto 0));
+                b <= unsigned(ui_in(7 downto 4));
+                op <= uio_in(2 downto 0);
+                uo_out <= "0000" & std_logic_vector(r);
+            end if;
+        end if;
+    end process;
+
+
+    with op select
+        r <=
+            a + b when "000",
+            a - b when "001",
+            a and b when "010",
+            a or b when "011",
+            a xor b when "100",
+            not a when "101",
+            (others => '0') when others;
+
+    uio_out <= (others => '0');
+    uio_oe <= (others => '0');
 
 end Behavioral;
