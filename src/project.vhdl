@@ -17,34 +17,56 @@ end tt_um_theli11;
 
 architecture Behavioral of tt_um_theli11 is
     signal a, b : unsigned(3 downto 0);
-    signal op : std_logic_vector(2 downto 0);
-    signal r : unsigned(3 downto 0);
+    signal op   : std_logic_vector(2 downto 0);
+    signal r    : unsigned(3 downto 0);
+
+    component sync is
+        port (
+            clk    : in  std_logic;
+            ena    : in  std_logic;
+            ui_in  : in  std_logic_vector(7 downto 0);
+            uio_in : in  std_logic_vector(2 downto 0);
+            r      : in  unsigned(3 downto 0);
+            a      : out unsigned(3 downto 0);
+            b      : out unsigned(3 downto 0);
+            op     : out std_logic_vector(2 downto 0);
+            uo_out : out std_logic_vector(7 downto 0)
+        );
+    end component;
+
+    component pe is
+        port (
+            a  : in  unsigned(3 downto 0);
+            b  : in  unsigned(3 downto 0);
+            op : in  std_logic_vector(2 downto 0);
+            r  : out unsigned(3 downto 0)
+        );
+    end component;
+
 begin
 
-    pipeline: process(clk) is
-    begin
-        if rising_edge(clk) then
-            if ena = '1' then
-                a <= unsigned(ui_in(3 downto 0));
-                b <= unsigned(ui_in(7 downto 4));
-                op <= uio_in(2 downto 0);
-                uo_out <= "0000" & std_logic_vector(r);
-            end if;
-        end if;
-    end process;
+    sync_inst: sync
+        port map (
+            clk    => clk,
+            ena    => ena,
+            ui_in  => ui_in,
+            uio_in => uio_in(2 downto 0),
+            r      => r,
+            a      => a,
+            b      => b,
+            op     => op,
+            uo_out => uo_out
+        );
 
-
-    with op select
-        r <=
-            a + b when "000",
-            a - b when "001",
-            a and b when "010",
-            a or b when "011",
-            a xor b when "100",
-            not a when "101",
-            (others => '0') when others;
+    pe_inst: pe
+        port map (
+            a  => a,
+            b  => b,
+            op => op,
+            r  => r
+        );
 
     uio_out <= (others => '0');
-    uio_oe <= (others => '0');
+    uio_oe  <= (others => '0');
 
 end Behavioral;
